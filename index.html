@@ -34,7 +34,7 @@ const tm=m=>pad(Math.floor(m/60))+':'+pad(m%60);
 let H12=false,WK=1;const tf=m=>{if(!H12)return tm(m);const h=Math.floor(m/60);return ((h%12)||12)+":"+pad(m%60)+(h%24<12?"AM":"PM")},hl=h=>H12?((h%12)||12)+(h%24<12?" AM":" PM"):pad(h)+":00";
 const tmin=s=>{const[a,b]=s.split(':');return +a*60+ +b};
 const DNS={ru:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],uk:['Пн','Вт','Ср','Чт','Пт','Сб','Нд'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun']};let DN=DNS.ru;const uid=()=>Math.random().toString(36).slice(2,9);
-const C={blue:['#E6F2FA','#3B82F6'],mint:['#E6F6F0','#22A06B'],peach:['#FDF0E6','#F59E0B'],lav:['#F0ECFA','#8B5CF6']};
+const C={red:['#FDECEA','#EF4444'],blue:['#E6F2FA','#3B82F6'],mint:['#E6F6F0','#22A06B'],peach:['#FDF0E6','#F59E0B'],lav:['#F0ECFA','#8B5CF6']};
 const P={high:['Высокий','#FDE8E4','#B42318'],med:['Средний','#E0EFFB','#1D5FA8'],low:['Низкий','#E1F5EA','#157347'],none:['Без срока','#FBF3D5','#8A6D0B']};
 const IC={sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',moon:'M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z',sun:'M12 17a5 5 0 100-10 5 5 0 000 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',plus:'M12 5v14M5 12h14',search:'M21 21l-4.3-4.3M11 19a8 8 0 100-16 8 8 0 000 16z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',user:'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z',x:'M18 6L6 18M6 6l12 12',l:'M15 18l-6-6 6-6',r:'M9 18l6-6-6-6',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6'};
 const Ic=({n,s=18})=>html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d=${IC[n]}/></svg>`;
@@ -48,7 +48,7 @@ const CFG0={lang:'ru',wk:1,s:8,e:22,dur:60,h12:false,work:false,hideDone:false,c
 const loadCfg=()=>{let c={};try{c=JSON.parse(localStorage.getItem('tt_cfg'))||{}}catch(e){}
  if(!c.lang){const w=window.Telegram&&window.Telegram.WebApp,u=w&&w.initDataUnsafe&&w.initDataUnsafe.user,l=u&&u.language_code;c.lang=['ru','uk','en'].includes(l)?l:'ru'}
  return {...CFG0,...c}};
-let DARK=false;const DT={high:"#F8A59B",med:"#8CC4F2",low:"#7ED9A5",none:"#E8CF73"};const bgc=k=>DARK?C[k][1]+"33":C[k][0];const gl=()=>DARK?"#232B38":"#EEF1F5";
+const PC={high:'red',med:'blue',low:'mint',none:'lav'};let DARK=false;const DT={high:"#F8A59B",med:"#8CC4F2",low:"#7ED9A5",none:"#E8CF73"};const bgc=k=>DARK?C[k][1]+"33":C[k][0];const gl=()=>DARK?"#232B38":"#EEF1F5";
 const Badge=({p})=>html`<span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style=${DARK?{background:P[p][2]+'30',color:DT[p]}:{background:P[p][1],color:P[p][2]}}>${L('p_'+p)}</span>`;
 const dueTxt=d=>d?L('until')+' '+pad(parse(d).getDate())+'.'+pad(parse(d).getMonth()+1):'';
 
@@ -67,8 +67,7 @@ function Modal({t,isNew,onSave,onDel,onClose}){
     <div><label className=${lb}>${L('start')}</label><input type="time" className=${inp} value=${tm(f.start)} onChange=${e=>e.target.value&&set('start',tmin(e.target.value))}/></div>
     <div><label className=${lb}>${L('len')}</label><select className=${inp} value=${f.dur} onChange=${e=>set('dur',+e.target.value)}>${[15,30,45,60,90,120,180].map(d=>html`<option key=${d} value=${d}>${d} ${L('min')}</option>`)}</select></div></div>`}
    ${flex&&html`<div><label className=${lb}>${L('deadline')}</label><input type="date" className=${inp} value=${f.due||''} onChange=${e=>set('due',e.target.value)}/></div>`}
-   <div><label className=${lb}>${L('priority')}</label><select className=${inp} value=${f.pri} onChange=${e=>set('pri',e.target.value)}>${Object.keys(P).map(k=>html`<option key=${k} value=${k}>${L('p_'+k)}</option>`)}</select></div>
-   <div><label className=${lb}>${L('color')}</label><div className="flex gap-2">${Object.keys(C).map(k=>html`<button key=${k} onClick=${()=>set('color',k)} className="w-8 h-8 rounded-full" style=${{background:bgc(k),border:'3px solid '+(f.color===k?C[k][1]:'transparent'),boxShadow:'inset 0 0 0 2px '+C[k][1]+'55'}}></button>`)}</div></div>
+   <div><label className=${lb}>${L('priority')}</label><div className="flex gap-1.5">${Object.keys(P).map(k=>html`<button key=${k} onClick=${()=>set('pri',k)} className="flex-1 py-1.5 rounded-lg text-[12px] font-medium" style=${{background:bgc(PC[k]),color:DARK?DT[k]:P[k][2],border:'2px solid '+(f.pri===k?C[PC[k]][1]:'transparent')}}>${L('p_'+k)}</button>`)}</div></div>
    <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked=${!!f.done} onChange=${e=>set('done',e.target.checked)}/> ${L('done')}</label>
   </div>
   <div className="flex gap-2 mt-5">
@@ -80,7 +79,7 @@ function Modal({t,isNew,onSave,onDel,onClose}){
 function FlexCard({t,days,onOpen,onAssign}){
  const[o,setO]=useState(false);
  return html`<div draggable="true" onDragStart=${e=>e.dataTransfer.setData('text/plain',t.id)} className="bg-white border border-[#E5E9F0] shadow-sm rounded-lg flex overflow-hidden mb-2.5 cursor-grab active:cursor-grabbing">
- <div style=${{width:4,background:C[t.color][1]}}></div>
+ <div style=${{width:4,background:C[PC[t.pri]][1]}}></div>
  <div className="flex-1 p-3 min-w-0">
   <div onClick=${onOpen} className=${'text-[13px] font-semibold cursor-pointer '+(t.done?'line-through text-gray-400':'')}>${t.title}</div>
   <div className="flex items-center justify-between mt-2 gap-2"><${Badge} p=${t.pri}/><span className="text-[11px] text-[#6B7280]">${dueTxt(t.due)}</span></div>
@@ -117,7 +116,7 @@ function Settings({cfg,setCfg,theme,setTheme,tg,name,initial,tasks,setTasks,setW
   try{navigator.clipboard.writeText(j).catch(()=>{})}catch(e){}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='tempotask.json';a.click()}catch(e){}};
  const imp=()=>{try{const d=JSON.parse(txt);if(!d||!Array.isArray(d.tasks))throw 0;
-  setTasks(d.tasks.map(t=>({id:t.id||uid(),title:String(t.title||''),pri:P[t.pri]?t.pri:'none',color:C[t.color]?t.color:'blue',date:t.date||null,start:+t.start||540,dur:+t.dur||60,due:t.due||'',done:!!t.done})));
+  setTasks(d.tasks.map(t=>({id:t.id||uid(),title:String(t.title||''),pri:P[t.pri]?t.pri:'none',color:C[PC[t.pri]]?PC[t.pri]:'blue',date:t.date||null,start:+t.start||540,dur:+t.dur||60,due:t.due||'',done:!!t.done})));
   if(d.cfg&&typeof d.cfg==='object')setCfg(d.cfg);setMsg(L('imported'))}catch(e){setMsg(L('imperr'))}};
  const btn='flex-1 border border-[#E5E9F0] rounded-lg py-2 text-[14px]';
  return html`<div className="fixed inset-0 z-50 bg-black/30 flex items-end lg:items-center justify-center" onClick=${onClose}>
@@ -137,7 +136,6 @@ function Settings({cfg,setCfg,theme,setTheme,tg,name,initial,tasks,setTasks,setW
   <//>
   <${Sec} t=${L('tsk')}>
    <${Row} l=${L('hidedone')}><${Tog} v=${cfg.hideDone} on=${v=>setCfg({hideDone:v})}/><//>
-   <${Row} l=${L('defcolor')}><div className="flex gap-2">${Object.keys(C).map(k=>html`<button key=${k} onClick=${()=>setCfg({color:k})} className="w-7 h-7 rounded-full" style=${{background:bgc(k),border:'3px solid '+(cfg.color===k?C[k][1]:'transparent'),boxShadow:'inset 0 0 0 2px '+C[k][1]+'55'}}></button>`)}</div><//>
    <${Row} l=${L('defpri')}><select className=${sel} value=${cfg.pri} onChange=${e=>setCfg({pri:e.target.value})}>${Object.keys(P).map(k=>html`<option key=${k} value=${k}>${L('p_'+k)}</option>`)}</select><//>
    <${Row} l=${L('haptic')}><${Tog} v=${cfg.haptic} on=${v=>setCfg({haptic:v})}/><//>
   <//>
@@ -236,7 +234,7 @@ function App(){
       ${days.map(d=>{const ds=fmt(d);return html`<div key=${ds} className="flex-1 relative border-l border-[#EEF1F5]" style=${{backgroundColor:ds===today?(DARK?'#1A2230':'#F8FAFF'):'transparent',backgroundImage:'linear-gradient('+gl()+' 1px,transparent 1px)',backgroundSize:'100% '+H+'px'}}
        onDragOver=${e=>e.preventDefault()} onDrop=${e=>drop(e,d)} onClick=${e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();newT({date:ds,start:S*60+Math.floor((e.clientY-r.top)/H*2)*30})}}}>
        ${tasks.filter(t=>t.date===ds&&ok(t)).map(t=>html`<div key=${t.id} draggable="true" onDragStart=${e=>e.dataTransfer.setData('text/plain',t.id)} onClick=${()=>setModal({t})}
-        className=${'absolute left-1 right-1 rounded-md px-2 py-1 overflow-hidden cursor-grab '+(t.done?'opacity-50':'')} style=${{top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(t.color),borderLeft:'4px solid '+C[t.color][1]}}>
+        className=${'absolute left-1 right-1 rounded-md px-2 py-1 overflow-hidden cursor-grab '+(t.done?'opacity-50':'')} style=${{top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(PC[t.pri]),borderLeft:'4px solid '+C[PC[t.pri]][1]}}>
         <div className=${'text-[12px] font-semibold leading-tight '+(t.done?'line-through':'')}>${t.title}</div><div className="text-[11px] text-[#6B7280]">${tf(t.start)}–${tf(t.start+t.dur)}</div></div>`)}</div>`})}
       ${showNow&&html`<div className="absolute pointer-events-none z-10" style=${{top:(nm-S*60)/60*H,left:0,right:0}}><div className="h-px bg-[#EF4444]" style=${{marginLeft:56}}></div><div className="absolute -top-2.5 left-1 bg-[#EF4444] text-white text-[10px] px-1.5 py-0.5 rounded-full">${DN[(now.getDay()+6)%7]} ${tf(nm)}</div></div>`}
      </div></div>
@@ -264,7 +262,7 @@ function App(){
       onClick=${e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();newT({date:ds,start:S*60+Math.floor((e.clientY-r.top)/H*2)*30})}}}>
       ${tasks.filter(t=>t.date===ds&&ok(t)).map(t=>html`<div key=${t.id} onPointerDown=${e=>begin(e,t,()=>setModal({t}))} onContextMenu=${nc}
        className=${'absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 overflow-hidden '+(t.done?'opacity-50 ':'')+(g&&g.t.id===t.id?'opacity-30':'')}
-       style=${{...ns,top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(t.color),borderLeft:'4px solid '+C[t.color][1]}}>
+       style=${{...ns,top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(PC[t.pri]),borderLeft:'4px solid '+C[PC[t.pri]][1]}}>
        <div className=${'text-[11px] font-semibold leading-tight '+(t.done?'line-through':'')}>${t.title}</div><div className="text-[10px] text-[#6B7280]">${tf(t.start)}–${tf(t.start+t.dur)}</div></div>`)}</div>`})}
      ${showNow&&html`<div className="absolute h-px bg-[#EF4444] pointer-events-none z-10" style=${{top:(nm-S*60)/60*H,left:44,right:0}}></div>`}
     </div></div></div>
@@ -273,9 +271,9 @@ function App(){
  <div data-flex="1" className=${'shrink-0 border-t border-[#E5E9F0] px-3 pt-2 transition-colors '+(overFlex?'bg-blue-50':'bg-[#F6F8FA]')} style=${{paddingBottom:8}}>
   <div className="flex items-center justify-between mb-2"><b className="text-[13px]">${L('flex')} <span className="text-gray-400 font-normal">(${nflex})</span> <span className="text-[11px] text-gray-400 font-normal">· ${L('holdhint')}</span></b><button onClick=${()=>setCol(!col)} className="p-1 text-gray-500" style=${{transform:col?'rotate(-90deg)':'rotate(90deg)'}}><${Ic} n="r" s=${16}/></button></div>
   ${!col&&html`<div className="mb-2">${FlexInput}</div>
-  <div className="flex gap-2 overflow-x-auto pb-1" style=${{minHeight:70}}>${flex.length?flex.map(t=>html`<div key=${t.id} onPointerDown=${e=>begin(e,t,()=>setModal({t}))} onContextMenu=${nc} className=${'shrink-0 w-[150px] bg-white border border-[#E5E9F0] shadow-sm rounded-lg flex overflow-hidden '+(g&&g.t.id===t.id?'opacity-40':'')} style=${ns}><div style=${{width:4,background:C[t.color][1]}}></div><div className="p-2 min-w-0 flex-1"><div className="text-[12px] font-semibold leading-tight line-clamp-2">${t.title}</div><div className="mt-1.5 flex items-center justify-between"><${Badge} p=${t.pri}/></div>${t.due&&html`<div className="text-[10px] text-[#6B7280] mt-1">${dueTxt(t.due)}</div>`}</div></div>`):html`<div className="text-[12px] text-gray-400 py-4">${L('flexempty')}</div>`}</div>`}
+  <div className="flex gap-2 overflow-x-auto pb-1" style=${{minHeight:70}}>${flex.length?flex.map(t=>html`<div key=${t.id} onPointerDown=${e=>begin(e,t,()=>setModal({t}))} onContextMenu=${nc} className=${'shrink-0 w-[150px] bg-white border border-[#E5E9F0] shadow-sm rounded-lg flex overflow-hidden '+(g&&g.t.id===t.id?'opacity-40':'')} style=${ns}><div style=${{width:4,background:C[PC[t.pri]][1]}}></div><div className="p-2 min-w-0 flex-1"><div className="text-[12px] font-semibold leading-tight line-clamp-2">${t.title}</div><div className="mt-1.5 flex items-center justify-between"><${Badge} p=${t.pri}/></div>${t.due&&html`<div className="text-[10px] text-[#6B7280] mt-1">${dueTxt(t.due)}</div>`}</div></div>`):html`<div className="text-[12px] text-gray-400 py-4">${L('flexempty')}</div>`}</div>`}
  </div>
- ${g&&html`<div className="fixed z-[60] pointer-events-none rounded-md px-2 py-1 shadow-xl" style=${{left:g.x-55,top:g.y-30,width:110,background:DARK?'#243044':bgc(g.t.color),borderLeft:'4px solid '+C[g.t.color][1]}}><div className="text-[11px] font-semibold leading-tight">${g.t.title}</div><div className="text-[10px] font-medium text-[#111C33]">${g.h?(g.h.date?DN[(parse(g.h.date).getDay()+6)%7]+' '+tf(g.h.start):L('toflexlow')):'—'}</div></div>`}
+ ${g&&html`<div className="fixed z-[60] pointer-events-none rounded-md px-2 py-1 shadow-xl" style=${{left:g.x-55,top:g.y-30,width:110,background:DARK?'#243044':bgc(PC[g.t.pri]),borderLeft:'4px solid '+C[PC[g.t.pri]][1]}}><div className="text-[11px] font-semibold leading-tight">${g.t.title}</div><div className="text-[10px] font-medium text-[#111C33]">${g.h?(g.h.date?DN[(parse(g.h.date).getDay()+6)%7]+' '+tf(g.h.start):L('toflexlow')):'—'}</div></div>`}
  ${modalEl}</div>`;
 }
 ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
