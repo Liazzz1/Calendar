@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TempoTask</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}html,body,#root{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}*{box-sizing:border-box}input,select,button{font-family:inherit}.sh{animation:up .18s ease-out}@keyframes up{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}html.dark{color-scheme:dark}.dark body{background:#0F141C;color:#E5E9F0}.dark input,.dark select{color:#E5E9F0}.dark .bg-white{background:#171D27!important}.dark .bg-\[\#F6F8FA\]{background:#0F141C!important}.dark .border-\[\#E5E9F0\]{border-color:#2A3340!important}.dark .border-\[\#EEF1F5\]{border-color:#232B38!important}.dark .text-\[\#6B7280\],.dark .text-gray-500,.dark .text-gray-400{color:#9AA4B2!important}.dark .bg-\[\#111C33\]{background:#3B82F6!important;color:#fff}.dark .text-blue-600{color:#8CC4F2!important}.dark .bg-blue-50{background:#1B2A44!important}.dark .hover\:bg-gray-100:hover,.dark .hover\:bg-white:hover{background:#232B38!important}.dark .text-\[\#111C33\]{color:#E5E9F0!important}.dark .shadow-sm{box-shadow:none}.dark .border-red-200{border-color:#5B2A2A!important}
+body{background:#F6F8FA;color:#111827;-webkit-font-smoothing:antialiased}
+.dark body,.dark #root{background:#0F141C;color:#E5E9F0}.dark #root{color:#E5E9F0}
+*{scrollbar-width:thin;scrollbar-color:#CBD2DC transparent}.dark *{scrollbar-color:#3A4556 transparent}
+button{transition:background-color .15s,opacity .15s,transform .1s}button:active{transform:scale(.97)}
+input:focus,select:focus{box-shadow:0 0 0 3px rgba(59,130,246,.18)}.dark input:focus,.dark select:focus{border-color:#3B82F6!important}
+::selection{background:#BFDBFE}.dark ::selection{background:#1E40AF}
+.bg-black\/30{backdrop-filter:blur(3px)}
+[draggable=true]{box-shadow:0 1px 2px rgba(17,28,51,.06)}.dark [draggable=true]{box-shadow:none}
+.dark .text-white{color:#fff}
+</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState,useEffect}=React;const html=htm.bind(React.createElement);
+let S=8,E=22;const H=48,pad=n=>String(n).padStart(2,'0');
+const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[a,b,c]=s.split('-');return new Date(+a,b-1,+c)};
+const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mon=d=>add(d,-((d.getDay()-WK+7)%7));
+const tm=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+let H12=false,WK=1;const tf=m=>{if(!H12)return tm(m);const h=Math.floor(m/60);return ((h%12)||12)+":"+pad(m%60)+(h%24<12?"AM":"PM")},hl=h=>H12?((h%12)||12)+(h%24<12?" AM":" PM"):pad(h)+":00";
+const tmin=s=>{const[a,b]=s.split(':');return +a*60+ +b};
+const DNS={ru:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],uk:['Пн','Вт','Ср','Чт','Пт','Сб','Нд'],en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun']};let DN=DNS.ru;const uid=()=>Math.random().toString(36).slice(2,9);
+const C={blue:['#E6F2FA','#3B82F6'],mint:['#E6F6F0','#22A06B'],peach:['#FDF0E6','#F59E0B'],lav:['#F0ECFA','#8B5CF6']};
+const P={high:['Высокий','#FDE8E4','#B42318'],med:['Средний','#E0EFFB','#1D5FA8'],low:['Низкий','#E1F5EA','#157347'],none:['Без срока','#FBF3D5','#8A6D0B']};
+const IC={sliders:'M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6',moon:'M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z',sun:'M12 17a5 5 0 100-10 5 5 0 000 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',plus:'M12 5v14M5 12h14',search:'M21 21l-4.3-4.3M11 19a8 8 0 100-16 8 8 0 000 16z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z',user:'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z',x:'M18 6L6 18M6 6l12 12',l:'M15 18l-6-6 6-6',r:'M9 18l6-6-6-6',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6'};
+const Ic=({n,s=18})=>html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d=${IC[n]}/></svg>`;
+const seed=()=>{const m=mon(new Date()),d=i=>fmt(add(m,i));const T=(title,pri,color,date,start,dur,due)=>({id:uid(),title,pri,color,date,start,dur,due:due||''});
+return[T('Командная планёрка','med','blue',d(0),540,30),T('Стратегия контента','low','mint',d(1),600,90),T('Синк по проекту','med','lav',d(2),600,60),T('Демо клиенту','high','peach',d(0),840,60),T('Обед с Сарой','low','mint',d(3),720,60),T('Ревью макетов','med','blue',d(2),900,90),T('Планирование бюджета','high','peach',d(4),660,60),
+T('Подготовить маркетинг-план Q4','high','peach',null,540,120,fmt(add(m,3))),T('Финализировать презентацию','med','blue',null,540,60,fmt(add(m,4))),T('Подготовка к встрече команды','low','mint',null,540,45,fmt(add(m,5))),T('Обновить документацию','none','lav',null,540,60),T('Записаться к стоматологу','none','blue',null,540,30),T('Разобрать почту','low','mint',null,540,30)]};
+const load=()=>{try{const s=localStorage.getItem('tt_tasks');if(s)return JSON.parse(s)}catch(e){}return seed()};
+const I={
+ru:{newtask:'Новая задача',task:'Задача',title:'Название',toflex:'Во флекс (без даты)',day:'День',start:'Начало',len:'Длина',min:'мин',deadline:'Дедлайн',priority:'Приоритет',color:'Цвет',done:'Выполнено',save:'Сохранить',p_high:'Высокий',p_med:'Средний',p_low:'Низкий',p_none:'Без срока',assign:'Назначить день',until:'до',flexempty:'Флекс пуст',addflex:'+ Добавить во флекс...',search:'Поиск задач',flex:'Флекс',holdhint:'удерживай и тяни в календарь',today:'Сегодня',week:'Неделя',workdays:'Рабочие дни',toflexlow:'во флекс',menu:'Меню профиля',profile:'Профиль',settings:'Настройки',light_t:'Светлая тема',dark_t:'Тёмная тема',guest:'Гость',tasks:'Задач',inflex:'Во флексе',donec:'Готово',lang:'Язык',notg:'Ты не в Telegram. Открой приложение через бота, и здесь появятся имя и фото из профиля.',theme:'Тема',th_light:'Светлая',th_dark:'Тёмная',th_auto:'Авто',language:'Язык интерфейса',cal:'Календарь',wkstart:'Неделя начинается',mon:'Пн',sun:'Вс',hours:'Часы сетки',from:'с',to:'до',defdur:'Длина по умолчанию',h12:'Формат времени',defwork:'Рабочие дни по умолчанию',tsk:'Задачи',hidedone:'Скрывать выполненные',defcolor:'Цвет по умолчанию',defpri:'Приоритет по умолчанию',haptic:'Вибрация при перетягивании',data:'Данные',export:'Экспорт',import:'Импорт',exported:'Скопировано и сохранено в файл. Ниже текст, если не вышло.',imported:'Импортировано',imperr:'Не вышло прочитать данные',datahint:'Для импорта вставь JSON сюда',reset:'Сбросить демо-данные',reset_ask:'Точно? Нажми ещё раз'},
+uk:{newtask:'Нова задача',task:'Задача',title:'Назва',toflex:'У флекс (без дати)',day:'День',start:'Початок',len:'Тривалість',min:'хв',deadline:'Дедлайн',priority:'Пріоритет',color:'Колір',done:'Виконано',save:'Зберегти',p_high:'Високий',p_med:'Середній',p_low:'Низький',p_none:'Без терміну',assign:'Призначити день',until:'до',flexempty:'Флекс порожній',addflex:'+ Додати у флекс...',search:'Пошук завдань',flex:'Флекс',holdhint:'утримуй і тягни в календар',today:'Сьогодні',week:'Тиждень',workdays:'Робочі дні',toflexlow:'у флекс',menu:'Меню профілю',profile:'Профіль',settings:'Налаштування',light_t:'Світла тема',dark_t:'Темна тема',guest:'Гість',tasks:'Завдань',inflex:'У флексі',donec:'Готово',lang:'Мова',notg:'Ти не в Telegram. Відкрий застосунок через бота, і тут з’являться ім’я та фото з профілю.',theme:'Тема',th_light:'Світла',th_dark:'Темна',th_auto:'Авто',language:'Мова інтерфейсу',cal:'Календар',wkstart:'Тиждень починається',mon:'Пн',sun:'Нд',hours:'Години сітки',from:'з',to:'до',defdur:'Тривалість за замовчуванням',h12:'Формат часу',defwork:'Робочі дні за замовчуванням',tsk:'Завдання',hidedone:'Ховати виконані',defcolor:'Колір за замовчуванням',defpri:'Пріоритет за замовчуванням',haptic:'Вібрація під час перетягування',data:'Дані',export:'Експорт',import:'Імпорт',exported:'Скопійовано і збережено у файл. Нижче текст, якщо не вийшло.',imported:'Імпортовано',imperr:'Не вдалося прочитати дані',datahint:'Для імпорту встав JSON сюди',reset:'Скинути демо-дані',reset_ask:'Точно? Натисни ще раз'},
+en:{newtask:'New task',task:'Task',title:'Title',toflex:'To Flex (no date)',day:'Day',start:'Start',len:'Length',min:'min',deadline:'Deadline',priority:'Priority',color:'Color',done:'Done',save:'Save',p_high:'High',p_med:'Medium',p_low:'Low',p_none:'No deadline',assign:'Assign day',until:'by',flexempty:'Flex is empty',addflex:'+ Add to Flex...',search:'Search tasks',flex:'Flex',holdhint:'hold and drag to the calendar',today:'Today',week:'Week',workdays:'Work days',toflexlow:'to Flex',menu:'Profile menu',profile:'Profile',settings:'Settings',light_t:'Light theme',dark_t:'Dark theme',guest:'Guest',tasks:'Tasks',inflex:'In Flex',donec:'Done',lang:'Language',notg:'You are not in Telegram. Open the app through the bot to see your name and photo here.',theme:'Theme',th_light:'Light',th_dark:'Dark',th_auto:'Auto',language:'Interface language',cal:'Calendar',wkstart:'Week starts on',mon:'Mon',sun:'Sun',hours:'Grid hours',from:'from',to:'to',defdur:'Default length',h12:'Time format',defwork:'Work days by default',tsk:'Tasks',hidedone:'Hide completed',defcolor:'Default color',defpri:'Default priority',haptic:'Haptics when dragging',data:'Data',export:'Export',import:'Import',exported:'Copied and saved to a file. The text is below in case that failed.',imported:'Imported',imperr:'Could not read the data',datahint:'Paste JSON here to import',reset:'Reset demo data',reset_ask:'Sure? Tap again'}};
+let LANG='ru';const L=k=>(I[LANG]&&I[LANG][k])||I.en[k]||k;
+const CFG0={lang:'ru',wk:1,s:8,e:22,dur:60,h12:false,work:false,hideDone:false,color:'blue',pri:'med',haptic:true};
+const loadCfg=()=>{let c={};try{c=JSON.parse(localStorage.getItem('tt_cfg'))||{}}catch(e){}
+ if(!c.lang){const w=window.Telegram&&window.Telegram.WebApp,u=w&&w.initDataUnsafe&&w.initDataUnsafe.user,l=u&&u.language_code;c.lang=['ru','uk','en'].includes(l)?l:'ru'}
+ return {...CFG0,...c}};
+let DARK=false;const DT={high:"#F8A59B",med:"#8CC4F2",low:"#7ED9A5",none:"#E8CF73"};const bgc=k=>DARK?C[k][1]+"33":C[k][0];const gl=()=>DARK?"#232B38":"#EEF1F5";
+const Badge=({p})=>html`<span className="text-[11px] font-medium px-2 py-0.5 rounded-md" style=${DARK?{background:P[p][2]+'30',color:DT[p]}:{background:P[p][1],color:P[p][2]}}>${L('p_'+p)}</span>`;
+const dueTxt=d=>d?L('until')+' '+pad(parse(d).getDate())+'.'+pad(parse(d).getMonth()+1):'';
+
+function Modal({t,isNew,onSave,onDel,onClose}){
+ const[f,setF]=useState({...t});const set=(k,v)=>setF(p=>({...p,[k]:v}));const flex=!f.date;
+ const inp='w-full border border-[#E5E9F0] rounded-lg px-3 py-2 text-[14px] bg-white outline-none focus:border-blue-400';
+ const lb='text-[12px] text-gray-500 mb-1 block';
+ return html`<div className="fixed inset-0 z-50 bg-black/30 flex items-end lg:items-center justify-center" onClick=${onClose}>
+ <div className="sh bg-white w-full lg:w-[420px] rounded-t-2xl lg:rounded-2xl p-5 max-h-[92vh] overflow-auto" style=${{paddingBottom:'calc(20px + env(safe-area-inset-bottom,0px))'}} onClick=${e=>e.stopPropagation()}>
+  <div className="flex justify-between items-center mb-4"><b className="text-[16px]">${isNew?L('newtask'):L('task')}</b><button onClick=${onClose} className="text-gray-400"><${Ic} n="x"/></button></div>
+  <div className="space-y-3">
+   <div><label className=${lb}>${L('title')}</label><input autoFocus className=${inp} value=${f.title} onChange=${e=>set('title',e.target.value)}/></div>
+   <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked=${flex} onChange=${e=>set('date',e.target.checked?null:fmt(new Date()))}/> ${L('toflex')}</label>
+   ${!flex&&html`<div className="grid grid-cols-3 gap-2">
+    <div className="col-span-3 sm:col-span-1"><label className=${lb}>${L('day')}</label><input type="date" className=${inp} value=${f.date} onChange=${e=>e.target.value&&set('date',e.target.value)}/></div>
+    <div><label className=${lb}>${L('start')}</label><input type="time" className=${inp} value=${tm(f.start)} onChange=${e=>e.target.value&&set('start',tmin(e.target.value))}/></div>
+    <div><label className=${lb}>${L('len')}</label><select className=${inp} value=${f.dur} onChange=${e=>set('dur',+e.target.value)}>${[15,30,45,60,90,120,180].map(d=>html`<option key=${d} value=${d}>${d} ${L('min')}</option>`)}</select></div></div>`}
+   ${flex&&html`<div><label className=${lb}>${L('deadline')}</label><input type="date" className=${inp} value=${f.due||''} onChange=${e=>set('due',e.target.value)}/></div>`}
+   <div><label className=${lb}>${L('priority')}</label><select className=${inp} value=${f.pri} onChange=${e=>set('pri',e.target.value)}>${Object.keys(P).map(k=>html`<option key=${k} value=${k}>${L('p_'+k)}</option>`)}</select></div>
+   <div><label className=${lb}>${L('color')}</label><div className="flex gap-2">${Object.keys(C).map(k=>html`<button key=${k} onClick=${()=>set('color',k)} className="w-8 h-8 rounded-full" style=${{background:bgc(k),border:'3px solid '+(f.color===k?C[k][1]:'transparent'),boxShadow:'inset 0 0 0 2px '+C[k][1]+'55'}}></button>`)}</div></div>
+   <label className="flex items-center gap-2 text-[14px]"><input type="checkbox" checked=${!!f.done} onChange=${e=>set('done',e.target.checked)}/> ${L('done')}</label>
+  </div>
+  <div className="flex gap-2 mt-5">
+   ${!isNew&&html`<button onClick=${()=>onDel(t.id)} className="px-3 py-2 rounded-lg border border-red-200 text-red-600"><${Ic} n="trash" s=${16}/></button>`}
+   <button onClick=${()=>f.title.trim()&&onSave({...f,title:f.title.trim()})} className="flex-1 bg-[#111C33] text-white rounded-lg py-2 text-[14px] font-medium">${L('save')}</button>
+  </div></div></div>`;
+}
+
+function FlexCard({t,days,onOpen,onAssign}){
+ const[o,setO]=useState(false);
+ return html`<div draggable="true" onDragStart=${e=>e.dataTransfer.setData('text/plain',t.id)} className="bg-white border border-[#E5E9F0] shadow-sm rounded-lg flex overflow-hidden mb-2.5 cursor-grab active:cursor-grabbing">
+ <div style=${{width:4,background:C[t.color][1]}}></div>
+ <div className="flex-1 p-3 min-w-0">
+  <div onClick=${onOpen} className=${'text-[13px] font-semibold cursor-pointer '+(t.done?'line-through text-gray-400':'')}>${t.title}</div>
+  <div className="flex items-center justify-between mt-2 gap-2"><${Badge} p=${t.pri}/><span className="text-[11px] text-[#6B7280]">${dueTxt(t.due)}</span></div>
+  <button onClick=${()=>setO(!o)} className="mt-2 text-[12px] text-blue-600 font-medium flex items-center gap-1"><${Ic} n="cal" s=${13}/> ${L('assign')}</button>
+  ${o&&html`<div className="flex flex-wrap gap-1.5 mt-2">${days.map(d=>html`<button key=${fmt(d)} onClick=${()=>onAssign(t.id,fmt(d))} className="px-2 py-1 rounded-md bg-[#F6F8FA] border border-[#E5E9F0] text-[12px]">${DN[(d.getDay()+6)%7]} ${d.getDate()}</button>`)}</div>`}
+ </div></div>`;
+}
+
+function Avatar({tg,initial,s=32}){const[bad,setBad]=useState(false),st={width:s,height:s};
+ if(tg&&tg.photo_url&&!bad)return html`<img src=${tg.photo_url} alt="" referrerPolicy="no-referrer" onError=${()=>setBad(true)} className="rounded-full object-cover shrink-0" style=${st}/>`;
+ return html`<div className="rounded-full bg-gradient-to-br from-orange-300 to-rose-400 text-white grid place-items-center font-semibold shrink-0" style=${{...st,fontSize:Math.round(s*0.4)}}>${initial}</div>`}
+function Profile({tg,initial,name,n,nflex,done,onClose}){
+ const st=[[L('tasks'),n],[L('inflex'),nflex],[L('donec'),done]];
+ return html`<div className="fixed inset-0 z-50 bg-black/30 flex items-end lg:items-center justify-center" onClick=${onClose}>
+ <div className="sh bg-white w-full lg:w-[380px] rounded-t-2xl lg:rounded-2xl p-5" style=${{paddingBottom:'calc(20px + env(safe-area-inset-bottom,0px))'}} onClick=${e=>e.stopPropagation()}>
+  <div className="flex justify-between items-center mb-3"><b className="text-[16px]">${L('profile')}</b><button onClick=${onClose} className="text-gray-400"><${Ic} n="x"/></button></div>
+  <div className="flex flex-col items-center text-center mb-4"><${Avatar} tg=${tg} initial=${initial} s=${72}/><b className="text-[17px] mt-3">${name}</b>
+   ${tg&&tg.username&&html`<div className="text-[13px] text-gray-500">@${tg.username}</div>`}
+   ${tg&&tg.is_premium&&html`<span className="mt-2 text-[11px] font-medium px-2 py-0.5 rounded-md" style=${{background:'#F0ECFA',color:'#6D4AC7'}}>Telegram Premium</span>`}</div>
+  <div className="grid grid-cols-3 gap-2 mb-4">${st.map(([l,v])=>html`<div key=${l} className="border border-[#E5E9F0] rounded-lg py-2 text-center"><div className="text-[18px] font-semibold">${v}</div><div className="text-[11px] text-gray-500">${l}</div></div>`)}</div>
+  ${tg?html`<div className="text-[13px] text-gray-500 space-y-1"><div>ID: ${tg.id}</div>${tg.language_code&&html`<div>${L('lang')}: ${tg.language_code}</div>`}</div>`:html`<div className="text-[13px] text-gray-500">${L('notg')}</div>`}
+ </div></div>`;
+}
+const Seg=({v,o,on})=>html`<div className="flex border border-[#E5E9F0] rounded-lg overflow-hidden text-[13px]">${o.map(([k,l])=>html`<button key=${String(k)} onClick=${()=>on(k)} className=${'flex-1 px-3 py-1.5 whitespace-nowrap '+(v===k?'bg-[#111C33] text-white':'bg-white')}>${l}</button>`)}</div>`;
+const Row=({l,children})=>html`<div className="flex items-center justify-between gap-3 py-1.5"><span className="text-[14px]">${l}</span><div>${children}</div></div>`;
+const Tog=({v,on})=>html`<button onClick=${()=>on(!v)} className="w-10 h-6 rounded-full relative shrink-0" style=${{background:v?'#3B82F6':'#CBD2DC'}}><i className="absolute top-0.5 w-5 h-5 rounded-full" style=${{left:v?18:2,background:'#fff',transition:'left .15s'}}></i></button>`;
+const Sec=({t,children})=>html`<div className="mt-4"><div className="text-[12px] text-gray-500 mb-1">${t}</div>${children}</div>`;
+function Settings({cfg,setCfg,theme,setTheme,tg,name,initial,tasks,setTasks,setWork,goToday,onReset,onClose}){
+ const[ask,setAsk]=useState(false),[txt,setTxt]=useState(''),[msg,setMsg]=useState('');
+ const n=tasks.length,nflex=tasks.filter(t=>!t.date).length;
+ const hrs=(a,b)=>Array.from({length:Math.max(0,b-a+1)},(_,i)=>a+i);
+ const sel='border border-[#E5E9F0] rounded-lg px-2 py-1.5 text-[13px] bg-white outline-none';
+ const exp=()=>{const j=JSON.stringify({v:1,tasks,cfg,theme},null,1);setTxt(j);setMsg(L('exported'));
+  try{navigator.clipboard.writeText(j).catch(()=>{})}catch(e){}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='tempotask.json';a.click()}catch(e){}};
+ const imp=()=>{try{const d=JSON.parse(txt);if(!d||!Array.isArray(d.tasks))throw 0;
+  setTasks(d.tasks.map(t=>({id:t.id||uid(),title:String(t.title||''),pri:P[t.pri]?t.pri:'none',color:C[t.color]?t.color:'blue',date:t.date||null,start:+t.start||540,dur:+t.dur||60,due:t.due||'',done:!!t.done})));
+  if(d.cfg&&typeof d.cfg==='object')setCfg(d.cfg);setMsg(L('imported'))}catch(e){setMsg(L('imperr'))}};
+ const btn='flex-1 border border-[#E5E9F0] rounded-lg py-2 text-[14px]';
+ return html`<div className="fixed inset-0 z-50 bg-black/30 flex items-end lg:items-center justify-center" onClick=${onClose}>
+ <div className="sh bg-white w-full lg:w-[400px] rounded-t-2xl lg:rounded-2xl p-5 max-h-[92vh] overflow-auto" style=${{paddingBottom:'calc(20px + env(safe-area-inset-bottom,0px))'}} onClick=${e=>e.stopPropagation()}>
+  <div className="flex justify-between items-center mb-3"><b className="text-[16px]">${L('settings')}</b><button onClick=${onClose} className="text-gray-400"><${Ic} n="x"/></button></div>
+  <div className="flex items-center gap-3"><${Avatar} tg=${tg} initial=${initial} s=${40}/><div><b className="text-[14px]">${name}</b><div className="text-[12px] text-gray-500">${L('tasks')}: ${n}, ${L('inflex')}: ${nflex}</div></div></div>
+  <${Sec} t=${L('theme')}><${Seg} v=${theme} on=${setTheme} o=${[['light',L('th_light')],['dark',L('th_dark')],['auto',L('th_auto')]]}/><//>
+  <${Sec} t=${L('language')}><${Seg} v=${cfg.lang} on=${l=>setCfg({lang:l})} o=${[['ru','Русский'],['uk','Українська'],['en','English']]}/><//>
+  <${Sec} t=${L('cal')}>
+   <${Row} l=${L('wkstart')}><${Seg} v=${cfg.wk} on=${v=>{setCfg({wk:v});goToday()}} o=${[[1,L('mon')],[0,L('sun')]]}/><//>
+   <${Row} l=${L('hours')}><div className="flex items-center gap-1.5 text-[13px]">${L('from')}
+    <select className=${sel} value=${cfg.s} onChange=${e=>setCfg({s:+e.target.value})}>${hrs(0,cfg.e-2).map(h=>html`<option key=${h} value=${h}>${pad(h)}:00</option>`)}</select>${L('to')}
+    <select className=${sel} value=${cfg.e} onChange=${e=>setCfg({e:+e.target.value})}>${hrs(cfg.s+2,24).map(h=>html`<option key=${h} value=${h}>${pad(h)}:00</option>`)}</select></div><//>
+   <${Row} l=${L('defdur')}><select className=${sel} value=${cfg.dur} onChange=${e=>setCfg({dur:+e.target.value})}>${[15,30,45,60,90,120,180].map(d=>html`<option key=${d} value=${d}>${d} ${L('min')}</option>`)}</select><//>
+   <${Row} l=${L('h12')}><${Seg} v=${cfg.h12} on=${v=>setCfg({h12:v})} o=${[[false,'24h'],[true,'12h']]}/><//>
+   <${Row} l=${L('defwork')}><${Tog} v=${cfg.work} on=${v=>{setCfg({work:v});setWork(v)}}/><//>
+  <//>
+  <${Sec} t=${L('tsk')}>
+   <${Row} l=${L('hidedone')}><${Tog} v=${cfg.hideDone} on=${v=>setCfg({hideDone:v})}/><//>
+   <${Row} l=${L('defcolor')}><div className="flex gap-2">${Object.keys(C).map(k=>html`<button key=${k} onClick=${()=>setCfg({color:k})} className="w-7 h-7 rounded-full" style=${{background:bgc(k),border:'3px solid '+(cfg.color===k?C[k][1]:'transparent'),boxShadow:'inset 0 0 0 2px '+C[k][1]+'55'}}></button>`)}</div><//>
+   <${Row} l=${L('defpri')}><select className=${sel} value=${cfg.pri} onChange=${e=>setCfg({pri:e.target.value})}>${Object.keys(P).map(k=>html`<option key=${k} value=${k}>${L('p_'+k)}</option>`)}</select><//>
+   <${Row} l=${L('haptic')}><${Tog} v=${cfg.haptic} on=${v=>setCfg({haptic:v})}/><//>
+  <//>
+  <${Sec} t=${L('data')}>
+   <div className="flex gap-2 mb-2"><button onClick=${exp} className=${btn}>${L('export')}</button><button onClick=${imp} className=${btn}>${L('import')}</button></div>
+   <textarea value=${txt} onChange=${e=>setTxt(e.target.value)} placeholder=${L('datahint')} rows="3" className="w-full border border-[#E5E9F0] rounded-lg px-3 py-2 text-[12px] bg-white outline-none font-mono"></textarea>
+   ${msg&&html`<div className="text-[12px] text-gray-500 mt-1">${msg}</div>`}
+  <//>
+  <button onClick=${()=>ask?onReset():setAsk(true)} className=${'w-full border rounded-lg py-2 text-[14px] mt-4 '+(ask?'border-red-300 text-red-600':'border-[#E5E9F0]')}>${ask?L('reset_ask'):L('reset')}</button>
+ </div></div>`;
+}
+const CW=112;
+function App(){
+ const[cfg,setCfgS]=useState(loadCfg);LANG=cfg.lang;DN=DNS[LANG];S=cfg.s;E=cfg.e;WK=cfg.wk;H12=cfg.h12;
+ const setCfg=p=>setCfgS(c=>({...c,...p}));
+ const[tasks,setTasks]=useState(load),[wo,setWo]=useState(0),[sel,setSel]=useState(fmt(new Date())),[tab,setTab]=useState('cal');
+ const[modal,setModal]=useState(null),[q,setQ]=useState(''),[sq,setSq]=useState(false),[work,setWork]=useState(cfg.work),[col,setCol]=useState(false);
+ const[now,setNow]=useState(new Date()),[wide,setWide]=useState(innerWidth>=1024),[nt,setNt]=useState('');
+ const[theme,setTheme]=useState(()=>{try{return localStorage.getItem('tt_theme')||'light'}catch(e){return'light'}}),[sysD,setSysD]=useState(()=>(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.colorScheme)?window.Telegram.WebApp.colorScheme==='dark':matchMedia('(prefers-color-scheme: dark)').matches),[setOpen,setSetOpen]=useState(false),[menu,setMenu]=useState(false),[profOpen,setProfOpen]=useState(false);
+ DARK=theme==='dark'||(theme==='auto'&&sysD);
+ useEffect(()=>{try{localStorage.setItem('tt_cfg',JSON.stringify(cfg))}catch(e){}document.documentElement.lang=cfg.lang},[cfg]);
+ useEffect(()=>{const m=matchMedia('(prefers-color-scheme: dark)'),f=()=>setSysD(m.matches);m.addEventListener('change',f);return()=>m.removeEventListener('change',f)},[]);
+ useEffect(()=>{document.documentElement.classList.toggle('dark',DARK);try{localStorage.setItem('tt_theme',theme)}catch(e){}try{const w=window.Telegram&&window.Telegram.WebApp;if(w){if(w.setHeaderColor)w.setHeaderColor(DARK?'#171D27':'#FFFFFF');if(w.setBackgroundColor)w.setBackgroundColor(DARK?'#0F141C':'#F6F8FA')}}catch(e){}},[theme,sysD]);
+ useEffect(()=>{try{localStorage.setItem('tt_tasks',JSON.stringify(tasks))}catch(e){}},[tasks]);
+ useEffect(()=>{try{const w=window.Telegram&&window.Telegram.WebApp;if(w){w.ready();w.expand();if(w.disableVerticalSwipes)w.disableVerticalSwipes()}}catch(e){}
+  const i=setInterval(()=>setNow(new Date()),30000),r=()=>setWide(innerWidth>=1024);addEventListener('resize',r);return()=>{clearInterval(i);removeEventListener('resize',r)}},[]);
+ const tg=(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.initDataUnsafe&&window.Telegram.WebApp.initDataUnsafe.user)||null;
+ const initial=(tg&&tg.first_name||'L')[0].toUpperCase();
+ const base=add(mon(new Date()),wo*7),all7=Array.from({length:7},(_,i)=>add(base,i)),days=wide&&work?all7.filter(d=>d.getDay()>0&&d.getDay()<6):all7;
+ const today=fmt(now),ok=t=>!(cfg.hideDone&&t.done)&&(!q||t.title.toLowerCase().includes(q.toLowerCase()));
+ const save=t=>{setTasks(p=>p.some(x=>x.id===t.id)?p.map(x=>x.id===t.id?t:x):[...p,t]);setModal(null)};
+ const del=id=>{setTasks(p=>p.filter(x=>x.id!==id));setModal(null)};
+ const move=(id,date,start)=>setTasks(p=>p.map(x=>x.id===id?{...x,date,start:start==null?x.start:start}:x));
+ const flex=tasks.filter(t=>!t.date&&ok(t)),nflex=tasks.filter(t=>!t.date).length;
+ const newT=(o)=>setModal({isNew:true,t:{id:uid(),title:'',pri:cfg.pri,color:cfg.color,date:null,start:Math.max(540,S*60),dur:cfg.dur,due:'',...o}});
+ const nav=n=>{setWo(wo+n);setSel(fmt(add(parse(sel),7*n)))};
+ const goToday=()=>{setWo(0);setSel(fmt(new Date()))};
+ const addFlex=e=>{if(e.key==='Enter'&&nt.trim()){setTasks(p=>[{id:uid(),title:nt.trim(),pri:cfg.pri,color:cfg.color,date:null,start:Math.max(540,S*60),dur:cfg.dur,due:''},...p]);setNt('')}};
+ const FlexInput=html`<input value=${nt} onChange=${e=>setNt(e.target.value)} onKeyDown=${addFlex} placeholder=${L('addflex')} className="w-full border border-[#E5E9F0] rounded-lg px-3 py-2 text-[13px] bg-white outline-none focus:border-blue-400"/>`;
+ const flexList=html`<div>${flex.length?flex.map(t=>html`<${FlexCard} key=${t.id} t=${t} days=${all7} onOpen=${()=>setModal({t})} onAssign=${(id,d)=>move(id,d,Math.max(540,S*60))}/>`):html`<div className="text-center text-[13px] text-gray-400 py-8">${L('flexempty')}</div>`}</div>`;
+ const logo=html`<div className="flex items-center gap-2 font-semibold text-[15px]"><div className="w-6 h-6 rounded-md text-white grid place-items-center text-[13px]" style=${{background:"linear-gradient(135deg,#3B82F6,#8B5CF6)"}}>T</div>TempoTask</div>`;
+ const fullName=tg?[tg.first_name,tg.last_name].filter(Boolean).join(' '):L('guest');
+ const mi='w-full text-left px-3 py-2 text-[14px] rounded-lg hover:bg-gray-100 flex items-center gap-2.5';
+ const go=f=>()=>{setMenu(false);f()};
+ const avatar=html`<div className="relative"><button onClick=${()=>setMenu(!menu)} aria-label=${L('menu')} className="block rounded-full"><${Avatar} tg=${tg} initial=${initial} s=${32}/></button>
+  ${menu&&html`<div className="fixed inset-0 z-40" onClick=${()=>setMenu(false)}></div><div className="sh absolute right-0 top-10 z-50 w-56 bg-white border border-[#E5E9F0] rounded-xl shadow-lg p-1.5">
+   <div className="px-3 py-2 border-b border-[#E5E9F0] mb-1"><div className="text-[14px] font-semibold truncate">${fullName}</div>${tg&&tg.username&&html`<div className="text-[12px] text-gray-500">@${tg.username}</div>`}</div>
+   <button className=${mi} onClick=${go(()=>setProfOpen(true))}><${Ic} n="user" s=${16}/> ${L('profile')}</button>
+   <button className=${mi} onClick=${go(()=>setSetOpen(true))}><${Ic} n="sliders" s=${16}/> ${L('settings')}</button>
+   <button className=${mi} onClick=${go(()=>setTheme(DARK?'light':'dark'))}><${Ic} n=${DARK?'sun':'moon'} s=${16}/> ${DARK?L('light_t'):L('dark_t')}</button></div>`}</div>`;
+ const modalEl0=modal&&html`<${Modal} key=${modal.t.id} t=${modal.t} isNew=${!!modal.isNew} onSave=${save} onDel=${del} onClose=${()=>setModal(null)}/>`;
+ const setEl=setOpen&&html`<${Settings} cfg=${cfg} setCfg=${setCfg} theme=${theme} setTheme=${setTheme} name=${tg?tg.first_name:L('guest')} initial=${initial} tg=${tg} tasks=${tasks} setTasks=${setTasks} setWork=${setWork} goToday=${goToday} onReset=${()=>{setTasks(seed());setSetOpen(false)}} onClose=${()=>setSetOpen(false)}/>`;
+ const profEl=profOpen&&html`<${Profile} tg=${tg} initial=${initial} name=${fullName} n=${tasks.length} nflex=${nflex} done=${tasks.filter(t=>t.done).length} onClose=${()=>setProfOpen(false)}/>`;
+ const modalEl=React.createElement(React.Fragment,null,modalEl0,setEl,profEl);
+
+ const sc=React.useRef(null),dr=React.useRef({}),[g,setG]=useState(null);
+ useEffect(()=>{const c=sc.current;if(!wide&&c){const i=Math.max(0,all7.findIndex(d=>fmt(d)===sel));c.scrollLeft=Math.max(0,i*CW-CW/2);c.scrollTop=Math.max(0,((new Date()).getHours()*60-S*60)/60*H-100)}},[wide,wo]);
+ const hit=(x,y)=>{const el=document.elementFromPoint(x,y);if(!el)return null;
+  const c=el.closest('[data-col]');if(c){const r=c.getBoundingClientRect();let m=S*60+Math.round((y-r.top)/H*4)*15;m=Math.max(S*60,Math.min(E*60-15,m));return{date:c.dataset.col,start:m}}
+  if(el.closest('[data-flex]'))return{date:null};return null};
+ const begin=(e,t,tap)=>{
+  if(e.button>0)return;const s=dr.current;clearTimeout(s.timer);clearInterval(s.iv);
+  s.on=false;s.sx=s.cx=e.clientX;s.sy=s.cy=e.clientY;
+  const tmv=ev=>{if(s.on)ev.preventDefault()};
+  const stop=()=>{clearTimeout(s.timer);clearInterval(s.iv);document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',cn);document.removeEventListener('touchmove',tmv)};
+  const upd=()=>setG({t,x:s.cx,y:s.cy,h:hit(s.cx,s.cy)});
+  const mv=ev=>{s.cx=ev.clientX;s.cy=ev.clientY;if(!s.on){if(Math.hypot(s.cx-s.sx,s.cy-s.sy)>8)stop();return}upd()};
+  const up=ev=>{const was=s.on;stop();if(was){const h=hit(ev.clientX,ev.clientY);setG(null);if(h)move(t.id,h.date,h.start)}else if(tap)tap()};
+  const cn=()=>{const was=s.on;stop();if(was){const h=hit(s.cx,s.cy);if(h)move(t.id,h.date,h.start)}setG(null)};
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',cn);document.addEventListener('touchmove',tmv,{passive:false});
+  s.timer=setTimeout(()=>{s.on=true;if(cfg.haptic){const w=window.Telegram&&window.Telegram.WebApp;if(w&&w.HapticFeedback)w.HapticFeedback.impactOccurred('medium');else if(navigator.vibrate)navigator.vibrate(12)}upd();
+   s.iv=setInterval(()=>{const c=sc.current;if(!c)return;const r=c.getBoundingClientRect();if(s.cx<r.left||s.cx>r.right||s.cy<r.top-20||s.cy>r.bottom)return;
+    const dx=s.cx<r.left+70?-10:s.cx>r.right-50?10:0,dy=s.cy<r.top+50?-10:s.cy>r.bottom-50?10:0;if(dx||dy){c.scrollBy(dx,dy);upd()}},30)},320)};
+ if(wide){
+  const nm=now.getHours()*60+now.getMinutes(),showNow=nm>=S*60&&nm<=E*60&&days.some(d=>fmt(d)===today);
+  const drop=(e,d)=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(!id)return;const r=e.currentTarget.getBoundingClientRect();
+   let m=S*60+Math.round((e.clientY-r.top)/H*4)*15;m=Math.max(S*60,Math.min(E*60-15,m));move(id,fmt(d),m)};
+  return html`<div className="h-full flex flex-col">
+  <header className="h-14 bg-white border-b border-[#E5E9F0] flex items-center justify-between px-5 shrink-0">${logo}
+   <div className="flex items-center gap-3"><div className="relative"><span className="absolute left-2.5 top-2 text-gray-400"><${Ic} n="search" s=${15}/></span><input value=${q} onChange=${e=>setQ(e.target.value)} placeholder=${L('search')} className="pl-8 pr-3 py-1.5 text-[13px] border border-[#E5E9F0] rounded-lg outline-none w-56 bg-[#F6F8FA]"/></div>${avatar}</div></header>
+  <div className="flex-1 min-h-0 flex gap-4 p-4">
+   <aside onDragOver=${e=>e.preventDefault()} onDrop=${e=>{e.preventDefault();const id=e.dataTransfer.getData('text/plain');if(id)move(id,null)}} className=${'shrink-0 flex flex-col transition-all '+(col?'w-11':'w-[27%] max-w-[360px]')}>
+    <div className="flex items-center justify-between mb-2">${!col&&html`<b className="text-[14px]">${L('flex')} <span className="text-gray-400 font-normal">(${nflex})</span></b>`}<button onClick=${()=>setCol(!col)} className="text-gray-500 p-1 rounded hover:bg-white"><${Ic} n=${col?'r':'l'} s=${16}/></button></div>
+    ${!col&&html`<div className="mb-3">${FlexInput}</div><div className="flex-1 overflow-auto pr-1">${flexList}</div>`}
+   </aside>
+   <section className="flex-1 min-w-0 bg-white rounded-xl border border-[#E5E9F0] shadow-sm flex flex-col">
+    <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E9F0]">
+     <div className="flex items-center gap-1"><button onClick=${()=>nav(-1)} className="p-1.5 rounded hover:bg-gray-100"><${Ic} n="l" s=${16}/></button><button onClick=${goToday} className="px-3 py-1 text-[13px] border border-[#E5E9F0] rounded-lg">${L('today')}</button><button onClick=${()=>nav(1)} className="p-1.5 rounded hover:bg-gray-100"><${Ic} n="r" s=${16}/></button>
+      <span className="ml-3 text-[14px] font-semibold">${days[0].getDate()}.${pad(days[0].getMonth()+1)} – ${days[days.length-1].getDate()}.${pad(days[days.length-1].getMonth()+1)}</span></div>
+     <div className="flex border border-[#E5E9F0] rounded-lg overflow-hidden text-[12px]">${[[L('week'),false],[L('workdays'),true]].map(([l,v])=>html`<button key=${l} onClick=${()=>setWork(v)} className=${'px-3 py-1.5 '+(work===v?'bg-[#111C33] text-white':'bg-white')}>${l}</button>`)}</div>
+    </div>
+    <div className="flex-1 overflow-auto relative">
+     <div className="flex sticky top-0 z-20 bg-white border-b border-[#E5E9F0]"><div className="w-14 shrink-0"></div>${days.map(d=>{const td=fmt(d)===today;return html`<div key=${fmt(d)} className="flex-1 text-center py-2 border-l border-[#EEF1F5]"><div className="text-[11px] text-[#6B7280]">${DN[(d.getDay()+6)%7]}</div><div className=${'text-[14px] font-semibold inline-grid place-items-center w-7 h-7 rounded-full '+(td?'bg-[#111C33] text-white':'')}>${d.getDate()}</div></div>`})}</div>
+     <div className="flex relative" style=${{height:(E-S)*H}}>
+      <div className="w-14 shrink-0 relative">${Array.from({length:E-S+1},(_,i)=>html`<div key=${i} className="absolute right-2 text-[11px] text-[#6B7280]" style=${{top:i*H-7}}>${hl(S+i)}</div>`)}</div>
+      ${days.map(d=>{const ds=fmt(d);return html`<div key=${ds} className="flex-1 relative border-l border-[#EEF1F5]" style=${{backgroundColor:ds===today?(DARK?'#1A2230':'#F8FAFF'):'transparent',backgroundImage:'linear-gradient('+gl()+' 1px,transparent 1px)',backgroundSize:'100% '+H+'px'}}
+       onDragOver=${e=>e.preventDefault()} onDrop=${e=>drop(e,d)} onClick=${e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();newT({date:ds,start:S*60+Math.floor((e.clientY-r.top)/H*2)*30})}}}>
+       ${tasks.filter(t=>t.date===ds&&ok(t)).map(t=>html`<div key=${t.id} draggable="true" onDragStart=${e=>e.dataTransfer.setData('text/plain',t.id)} onClick=${()=>setModal({t})}
+        className=${'absolute left-1 right-1 rounded-md px-2 py-1 overflow-hidden cursor-grab '+(t.done?'opacity-50':'')} style=${{top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(t.color),borderLeft:'4px solid '+C[t.color][1]}}>
+        <div className=${'text-[12px] font-semibold leading-tight '+(t.done?'line-through':'')}>${t.title}</div><div className="text-[11px] text-[#6B7280]">${tf(t.start)}–${tf(t.start+t.dur)}</div></div>`)}</div>`})}
+      ${showNow&&html`<div className="absolute pointer-events-none z-10" style=${{top:(nm-S*60)/60*H,left:0,right:0}}><div className="h-px bg-[#EF4444]" style=${{marginLeft:56}}></div><div className="absolute -top-2.5 left-1 bg-[#EF4444] text-white text-[10px] px-1.5 py-0.5 rounded-full">${DN[(now.getDay()+6)%7]} ${tf(nm)}</div></div>`}
+     </div></div>
+   </section></div>${modalEl}</div>`;
+ }
+
+ // mobile
+ const nm=now.getHours()*60+now.getMinutes(),showNow=nm>=S*60&&nm<=E*60&&all7.some(d=>fmt(d)===today);
+ const ns={userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none'},nc=e=>e.preventDefault();
+ const overFlex=g&&g.h&&!g.h.date;
+ return html`<div className="h-full flex flex-col bg-[#F6F8FA]">
+ <header className="bg-white px-4 h-12 flex items-center justify-between shrink-0 border-b border-[#E5E9F0]">${logo}<div className="flex items-center gap-3"><button onClick=${()=>setSq(!sq)}><${Ic} n="search"/></button>${avatar}</div></header>
+ ${sq&&html`<div className="px-4 py-2 bg-white shrink-0"><input autoFocus value=${q} onChange=${e=>setQ(e.target.value)} placeholder=${L('search')} className="w-full border border-[#E5E9F0] rounded-lg px-3 py-2 text-[14px] outline-none"/></div>`}
+ <div className="bg-white flex items-center justify-between px-3 py-1.5 border-b border-[#E5E9F0] shrink-0">
+  <div className="flex items-center"><button onClick=${()=>nav(-1)} className="p-1.5"><${Ic} n="l" s=${16}/></button><button onClick=${goToday} className="px-3 py-1 text-[12px] border border-[#E5E9F0] rounded-lg">${L('today')}</button><button onClick=${()=>nav(1)} className="p-1.5"><${Ic} n="r" s=${16}/></button></div>
+  <span className="text-[13px] font-semibold">${all7[0].getDate()}.${pad(all7[0].getMonth()+1)} – ${all7[6].getDate()}.${pad(all7[6].getMonth()+1)}</span></div>
+ <div className="flex-1 min-h-0 relative bg-white">
+  <div ref=${sc} className="h-full overflow-auto" style=${{overscrollBehavior:'contain'}}>
+   <div style=${{width:44+7*CW}}>
+    <div className="flex sticky top-0 z-30 bg-white border-b border-[#E5E9F0]"><div className="w-11 shrink-0 sticky left-0 bg-white z-10"></div>${all7.map(d=>{const ds=fmt(d),td=ds===today,a=ds===sel;return html`<div key=${ds} onClick=${()=>setSel(ds)} className="text-center py-1.5 border-l border-[#EEF1F5]" style=${{width:CW}}><div className="text-[11px] text-[#6B7280]">${DN[(d.getDay()+6)%7]}</div><div className=${'text-[13px] font-semibold inline-grid place-items-center w-7 h-7 rounded-full '+(td?'bg-[#111C33] text-white ':'')+(a&&!td?'ring-2 ring-blue-400':'')}>${d.getDate()}</div></div>`})}</div>
+    <div className="flex relative" style=${{height:(E-S)*H}}>
+     <div className="w-11 shrink-0 sticky left-0 z-20 bg-white">${Array.from({length:E-S+1},(_,i)=>html`<div key=${i} className="absolute right-1 text-[10px] text-[#6B7280]" style=${{top:i*H-6}}>${hl(S+i)}</div>`)}
+      ${showNow&&html`<div className="absolute left-0 bg-[#EF4444] text-white text-[9px] px-1 py-0.5 rounded-full z-10" style=${{top:(nm-S*60)/60*H-8}}>${tf(nm)}</div>`}</div>
+     ${all7.map(d=>{const ds=fmt(d);return html`<div key=${ds} data-col=${ds} className="relative border-l border-[#EEF1F5] shrink-0" style=${{width:CW,backgroundColor:ds===today?(DARK?'#1A2230':'#F8FAFF'):'transparent',backgroundImage:'linear-gradient('+gl()+' 1px,transparent 1px)',backgroundSize:'100% '+H+'px'}}
+      onClick=${e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();newT({date:ds,start:S*60+Math.floor((e.clientY-r.top)/H*2)*30})}}}>
+      ${tasks.filter(t=>t.date===ds&&ok(t)).map(t=>html`<div key=${t.id} onPointerDown=${e=>begin(e,t,()=>setModal({t}))} onContextMenu=${nc}
+       className=${'absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 overflow-hidden '+(t.done?'opacity-50 ':'')+(g&&g.t.id===t.id?'opacity-30':'')}
+       style=${{...ns,top:(t.start-S*60)/60*H+1,height:Math.max(t.dur/60*H-2,20),background:bgc(t.color),borderLeft:'4px solid '+C[t.color][1]}}>
+       <div className=${'text-[11px] font-semibold leading-tight '+(t.done?'line-through':'')}>${t.title}</div><div className="text-[10px] text-[#6B7280]">${tf(t.start)}–${tf(t.start+t.dur)}</div></div>`)}</div>`})}
+     ${showNow&&html`<div className="absolute h-px bg-[#EF4444] pointer-events-none z-10" style=${{top:(nm-S*60)/60*H,left:44,right:0}}></div>`}
+    </div></div></div>
+  <button onClick=${()=>newT({date:sel})} className="absolute right-3 bottom-3 w-12 h-12 rounded-full bg-[#111C33] text-white grid place-items-center shadow-lg z-40"><${Ic} n="plus" s=${22}/></button>
+ </div>
+ <div data-flex="1" className=${'shrink-0 border-t border-[#E5E9F0] px-3 pt-2 transition-colors '+(overFlex?'bg-blue-50':'bg-[#F6F8FA]')} style=${{paddingBottom:8}}>
+  <div className="flex items-center justify-between mb-2"><b className="text-[13px]">${L('flex')} <span className="text-gray-400 font-normal">(${nflex})</span> <span className="text-[11px] text-gray-400 font-normal">· ${L('holdhint')}</span></b><button onClick=${()=>setCol(!col)} className="p-1 text-gray-500" style=${{transform:col?'rotate(-90deg)':'rotate(90deg)'}}><${Ic} n="r" s=${16}/></button></div>
+  ${!col&&html`<div className="mb-2">${FlexInput}</div>
+  <div className="flex gap-2 overflow-x-auto pb-1" style=${{minHeight:70}}>${flex.length?flex.map(t=>html`<div key=${t.id} onPointerDown=${e=>begin(e,t,()=>setModal({t}))} onContextMenu=${nc} className=${'shrink-0 w-[150px] bg-white border border-[#E5E9F0] shadow-sm rounded-lg flex overflow-hidden '+(g&&g.t.id===t.id?'opacity-40':'')} style=${ns}><div style=${{width:4,background:C[t.color][1]}}></div><div className="p-2 min-w-0 flex-1"><div className="text-[12px] font-semibold leading-tight line-clamp-2">${t.title}</div><div className="mt-1.5 flex items-center justify-between"><${Badge} p=${t.pri}/></div>${t.due&&html`<div className="text-[10px] text-[#6B7280] mt-1">${dueTxt(t.due)}</div>`}</div></div>`):html`<div className="text-[12px] text-gray-400 py-4">${L('flexempty')}</div>`}</div>`}
+ </div>
+ ${g&&html`<div className="fixed z-[60] pointer-events-none rounded-md px-2 py-1 shadow-xl" style=${{left:g.x-55,top:g.y-30,width:110,background:DARK?'#243044':bgc(g.t.color),borderLeft:'4px solid '+C[g.t.color][1]}}><div className="text-[11px] font-semibold leading-tight">${g.t.title}</div><div className="text-[10px] font-medium text-[#111C33]">${g.h?(g.h.date?DN[(parse(g.h.date).getDay()+6)%7]+' '+tf(g.h.start):L('toflexlow')):'—'}</div></div>`}
+ ${modalEl}</div>`;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
+</script>
+</body>
+</html>
